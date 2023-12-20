@@ -8,7 +8,7 @@ import ssd1306
 import ussl
 import time
 
-SERVER = '192.168.1.5'  # MQTT Server Addresse
+SERVER = '192.168.1.5'
 CLIENT_ID = 'ESP321'
 PORT = 1883
 USER = 'esp_client'
@@ -49,21 +49,18 @@ def refresh(bpm, beat, v, minima, maxima):
     global last_y
 
     display.vline(0, 0, 32, 0)
-    display.scroll(-1, 0)  # Scroll left 1 pixel
+    display.scroll(-1, 0)
 
     if maxima - minima > 0:
-        # Draw beat line.
         y = 32 - int(16 * (v - minima) / (maxima - minima))
         display.line(125, last_y, 126, y, 1)
         last_y = y
 
-    # Clear top text area.
-    display.fill_rect(0, 0, 128, 16, 0)  # Clear the top text area
+    display.fill_rect(0, 0, 128, 16, 0)  
 
     if bpm is not None:
         display.text("%d bpm" % bpm, 12, 0)
 
-    # Draw heart if beating.
     if beat:
         for y, row in enumerate(HEART):
             for x, c in enumerate(row):
@@ -84,7 +81,6 @@ def detect():
         v = adc.read()
         history.append(v)
 
-        # Get the tail, up to MAX_HISTORY length
         history = history[-MAX_HISTORY:]
 
         minima, maxima = min(history), max(history)
@@ -101,7 +97,6 @@ def detect():
 
         if v < threshold_off and beat:
             beat = False
-        # Inside the detect() function, add these print statements
         print("BPM:", bpm)
 
         refresh(bpm, beat, v, minima, maxima)
@@ -113,7 +108,6 @@ def sha256(data):
 
 def mqtt_publish():
     while True:
-        #client.connect()
         global bpm
         if bpm is not None:
             try:
@@ -121,7 +115,6 @@ def mqtt_publish():
                 msg = b'{},{}'.format(bpm, bpm_hash)
                 client.publish(TOPIC, msg)
                 print("Published BPM:", bpm)
-                #client.disconnect()
                 sleep(60)
             except Exception as e:
                 print(f"Error publishing message: {e}")
@@ -134,14 +127,12 @@ while retries < MAX_RETRIES:
         print("Connecting to MQTT broker...")
         client.connect()
         print("Connection successful!")
-        break  # Exit the loop if the connection is successful
+        break  
     except Exception as e:
         print(f"Connection Error (Attempt {retries + 1}): {e}")
         retries += 1
-        time.sleep(5)  # Wait before retrying
+        time.sleep(5)  
 
 
 _thread.start_new_thread(detect, ())
-#_thread.start_new_thread(mqtt_publish, ())
-#detect()
 mqtt_publish()
